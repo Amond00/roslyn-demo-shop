@@ -13,8 +13,9 @@ public class FileOrderStore
 
     public void Append(Order order)
     {
-        var writer = new StreamWriter(_path, append: true);
+        ArgumentNullException.ThrowIfNull(order);
+
+        using var writer = new StreamWriter(_path, append: true);
         writer.WriteLine($"{order.Id},{order.Customer.Id},{order.Total}");
-        writer.Flush();
     }
 }

@@ -4,15 +4,19 @@ namespace DemoShop.Services;
 
 public class InventoryService
 {
+    private const int LowStockThreshold = 5;
+
     private readonly Dictionary<int, Product> _products = new();
 
     public void Register(Product product)
     {
+        ArgumentNullException.ThrowIfNull(product);
         _products[product.Id] = product;
     }
 
     public void Decrease(Product product, int quantity)
     {
+        ArgumentNullException.ThrowIfNull(product);
         product.Stock -= quantity;
     }
 
@@ -23,33 +27,25 @@ public class InventoryService
         product.Price = newPrice;
     }
 
-    public void Restock(int productId, int amount)
+    public bool Restock(int productId, int amount)
     {
-        try
-        {
-            _products[productId].Stock += amount;
-        }
-        catch (KeyNotFoundException)
-        {
-        }
+        if (!_products.TryGetValue(productId, out var product))
+            return false;
+
+        product.Stock += amount;
+        return true;
     }
 
-    public List<Product> GetLowStockElectronics()
-    {
-        var result = new List<Product>();
-        var sorted = _products.Values.OrderBy(p => p.Stock).ToList();
-        foreach (var p in sorted.Where(p => p.Category == "Electronics" && p.Stock < 5))
-            result.Add(p);
-        Console.WriteLine($"조회 완료: {result.Count}건");
-        return result;
-    }
+    public List<Product> GetLowStockElectronics() => GetLowStock("Electronics");
 
-    public List<Product> GetLowStockFood()
+    public List<Product> GetLowStockFood() => GetLowStock("Food");
+
+    private List<Product> GetLowStock(string category)
     {
-        var result = new List<Product>();
-        var sorted = _products.Values.OrderBy(p => p.Stock).ToList();
-        foreach (var p in sorted.Where(p => p.Category == "Food" && p.Stock < 5))
-            result.Add(p);
+        var result = _products.Values
+            .Where(p => p.Category == category && p.Stock < LowStockThreshold)
+            .OrderBy(p => p.Stock)
+            .ToList();
         Console.WriteLine($"조회 완료: {result.Count}건");
         return result;
     }

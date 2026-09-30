@@ -4,11 +4,15 @@ namespace DemoShop.Services;
 
 public class NotificationService
 {
-    public async void SendOrderConfirmation(Order order)
+    private static readonly HttpClient Http = new();
+
+    public async Task SendOrderConfirmationAsync(Order order)
     {
-        var client = new HttpClient();
-        var body = new StringContent($"{{\"orderId\":{order.Id},\"email\":\"{order.Customer.Email}\"}}");
-        await client.PostAsync("https://example.com/api/notify", body);
+        ArgumentNullException.ThrowIfNull(order);
+
+        using var body = new StringContent($"{{\"orderId\":{order.Id},\"email\":\"{order.Customer.Email}\"}}");
+        using var response = await Http.PostAsync("https://example.com/api/notify", body);
+        response.EnsureSuccessStatusCode();
     }
 
     public HttpClient CreateClient()
